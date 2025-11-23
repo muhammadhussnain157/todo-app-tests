@@ -1,0 +1,15 @@
+{
+  "name": "todo-app-tests",
+  "version": "1.0.0",
+  "description": "Selenium tests for todo application",
+  "scripts": {
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "test:headless": "jest --runInBand --detectOpenHandles --forceExit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "selenium-webdriver": "^4.15.0"
+  }
+}
