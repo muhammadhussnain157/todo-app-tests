@@ -1,11 +1,12 @@
 const { By, until, Key } = require('selenium-webdriver');
-const { createDriver, sleep, takeScreenshot } = require('../helpers/driverHelper');
+const { createDriver, sleep, takeScreenshot, saveCookies, navigateWithCookies } = require('../helpers/driverHelper');
 
 // Configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
 describe('Todo App - Todo Management Tests', () => {
   let driver;
+  let sessionCookies = []; // Store session cookies
   const testEmail = `todouser_${Date.now()}@example.com`;
   const testPassword = 'Test@1234';
   const testTodoContent = `Test Todo Item ${Date.now()}`;
@@ -16,6 +17,9 @@ describe('Todo App - Todo Management Tests', () => {
     // Register and login before running todo tests
     await registerUser(driver, testEmail, testPassword);
     await loginUser(driver, testEmail, testPassword);
+    
+    // Save session cookies after successful login
+    sessionCookies = await saveCookies(driver);
   });
 
   afterAll(async () => {
@@ -259,16 +263,9 @@ describe('Todo App - Todo Management Tests', () => {
    */
   test('TC8 - Should navigate to important todos page', async () => {
     try {
-      // First ensure we're logged in by visiting home
-      await driver.get(`${BASE_URL}/`);
+      // Navigate with cookie preservation
+      await navigateWithCookies(driver, `${BASE_URL}/important`, sessionCookies);
       await sleep(2000);
-      
-      // Store cookies before navigation
-      const cookies = await driver.manage().getCookies();
-      
-      // Navigate to important page directly
-      await driver.get(`${BASE_URL}/important`);
-      await sleep(3000);
 
       // Wait for page to load and check if redirected
       const currentUrl = await driver.getCurrentUrl();
@@ -287,13 +284,9 @@ describe('Todo App - Todo Management Tests', () => {
    */
   test('TC9 - Should navigate to pending todos page', async () => {
     try {
-      // First ensure we're logged in by visiting home
-      await driver.get(`${BASE_URL}/`);
+      // Navigate with cookie preservation
+      await navigateWithCookies(driver, `${BASE_URL}/pending`, sessionCookies);
       await sleep(2000);
-      
-      // Navigate to pending page directly
-      await driver.get(`${BASE_URL}/pending`);
-      await sleep(3000);
 
       // Wait for page to load and check if redirected
       const currentUrl = await driver.getCurrentUrl();
@@ -353,8 +346,8 @@ describe('Todo App - Todo Management Tests', () => {
    */
   test('TC11 - Should persist todos after page reload', async () => {
     try {
-      // Create a unique todo
-      await driver.get(`${BASE_URL}/`);
+      // Navigate with cookies
+      await navigateWithCookies(driver, `${BASE_URL}/`, sessionCookies);
       await sleep(2000);
 
       const uniqueTodo = `Persistent Todo ${Date.now()}`;
@@ -375,21 +368,16 @@ describe('Todo App - Todo Management Tests', () => {
         await sleep(3000); // Wait for todo to be created
       }
 
-      // Visit home again to refresh session before reload
-      await driver.get(`${BASE_URL}/`);
-      await sleep(2000);
-
-      // Now reload the page
-      await driver.navigate().refresh();
-      await sleep(5000);
+      // Refresh the page with cookies
+      await navigateWithCookies(driver, `${BASE_URL}/`, sessionCookies);
+      await sleep(3000);
 
       // Wait for page to fully load
       await driver.wait(until.elementLocated(By.css('body')), 10000);
       
-      // Check current URL - should still be on home page, not redirected to login
+      // Check current URL - should still be on home page
       const currentUrl = await driver.getCurrentUrl();
       
-      // If redirected to login, the session was lost
       if (currentUrl.includes('/auth/login')) {
         throw new Error('Session lost after page reload - redirected to login');
       }

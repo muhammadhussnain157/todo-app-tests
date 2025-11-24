@@ -72,8 +72,62 @@ async function takeScreenshot(driver, name) {
   }
 }
 
+/**
+ * Save session cookies for reuse
+ * @param {WebDriver} driver - WebDriver instance
+ * @returns {Promise<Array>} - Array of cookies
+ */
+async function saveCookies(driver) {
+  try {
+    const cookies = await driver.manage().getCookies();
+    return cookies;
+  } catch (error) {
+    console.error('Failed to save cookies:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Restore session cookies
+ * @param {WebDriver} driver - WebDriver instance
+ * @param {Array} cookies - Array of cookies to restore
+ */
+async function restoreCookies(driver, cookies) {
+  try {
+    for (const cookie of cookies) {
+      // Remove expiry if it's in the past to avoid errors
+      const cookieToAdd = { ...cookie };
+      delete cookieToAdd.expiry;
+      await driver.manage().addCookie(cookieToAdd);
+    }
+  } catch (error) {
+    console.error('Failed to restore cookies:', error.message);
+  }
+}
+
+/**
+ * Navigate with cookie preservation
+ * @param {WebDriver} driver - WebDriver instance
+ * @param {string} url - URL to navigate to
+ * @param {Array} cookies - Optional cookies to ensure are set
+ */
+async function navigateWithCookies(driver, url, cookies = null) {
+  if (cookies && cookies.length > 0) {
+    // First visit the domain to allow cookie setting
+    await driver.get(url.split('/').slice(0, 3).join('/'));
+    await sleep(500);
+    await restoreCookies(driver, cookies);
+    await sleep(500);
+  }
+  await driver.get(url);
+  await sleep(2000);
+}
+
 module.exports = {
   createDriver,
   sleep,
   takeScreenshot,
+  saveCookies,
+  restoreCookies,
+  navigateWithCookies,
 };
