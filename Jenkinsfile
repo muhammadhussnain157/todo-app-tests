@@ -167,13 +167,13 @@ pipeline {
 
                                 if (line.contains('<failure')) {
                                     failed++
-                                    details += "${name} — FAILED\\n"
+                                    details += "<tr style='background-color: #fee;'><td style='padding: 12px; border: 1px solid #ddd;'>${name}</td><td style='padding: 12px; border: 1px solid #ddd; color: #d32f2f; font-weight: bold;'>❌ FAILED</td></tr>"
                                 } else if (line.contains('<skipped')) {
                                     skipped++
-                                    details += "${name} — SKIPPED\\n"
+                                    details += "<tr style='background-color: #fef9e7;'><td style='padding: 12px; border: 1px solid #ddd;'>${name}</td><td style='padding: 12px; border: 1px solid #ddd; color: #f57c00; font-weight: bold;'>⊘ SKIPPED</td></tr>"
                                 } else {
                                     passed++
-                                    details += "${name} — PASSED\\n"
+                                    details += "<tr style='background-color: #f1f8f4;'><td style='padding: 12px; border: 1px solid #ddd;'>${name}</td><td style='padding: 12px; border: 1px solid #ddd; color: #2e7d32; font-weight: bold;'>✓ PASSED</td></tr>"
                                 }
                             }
                         }
@@ -181,56 +181,161 @@ pipeline {
 
                     def buildStatus = currentBuild.result ?: 'SUCCESS'
                     def deploymentUrl = "http://${EC2_PUBLIC_IP}:3001"
+                    def statusColor = buildStatus == 'SUCCESS' ? '#2e7d32' : '#d32f2f'
+                    def statusIcon = buildStatus == 'SUCCESS' ? '✓' : '✗'
 
                     def emailBody = """
-==============================================
-Todo App - Test Results
-==============================================
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+        .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; }
+        .status-badge { display: inline-block; padding: 8px 20px; border-radius: 20px; font-weight: bold; margin-top: 15px; }
+        .status-success { background-color: #2e7d32; color: white; }
+        .status-failure { background-color: #d32f2f; color: white; }
+        .content { padding: 30px; }
+        .section { margin-bottom: 30px; }
+        .section-title { font-size: 18px; font-weight: 600; color: #667eea; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #667eea; }
+        .info-grid { display: table; width: 100%; border-collapse: collapse; }
+        .info-row { display: table-row; }
+        .info-label { display: table-cell; padding: 10px; font-weight: 600; color: #555; width: 40%; background-color: #f8f9fa; border: 1px solid #e9ecef; }
+        .info-value { display: table-cell; padding: 10px; border: 1px solid #e9ecef; }
+        .info-value a { color: #667eea; text-decoration: none; }
+        .info-value a:hover { text-decoration: underline; }
+        .summary-cards { display: table; width: 100%; margin-top: 15px; }
+        .summary-card { display: table-cell; text-align: center; padding: 20px; border-radius: 6px; margin: 0 5px; }
+        .card-total { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .card-passed { background-color: #e8f5e9; border: 2px solid #2e7d32; }
+        .card-failed { background-color: #ffebee; border: 2px solid #d32f2f; }
+        .card-skipped { background-color: #fff3e0; border: 2px solid #f57c00; }
+        .card-number { font-size: 36px; font-weight: bold; margin: 5px 0; }
+        .card-label { font-size: 14px; text-transform: uppercase; opacity: 0.8; }
+        .test-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .test-table th { background-color: #667eea; color: white; padding: 12px; text-align: left; font-weight: 600; }
+        .test-table td { padding: 12px; border: 1px solid #ddd; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e9ecef; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${statusIcon} Todo App - CI/CD Pipeline</h1>
+            <p>Automated Test Results</p>
+            <div class="status-badge status-${buildStatus.toLowerCase()}">${buildStatus}</div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">📊 Test Summary</div>
+                <table class="summary-cards">
+                    <tr>
+                        <td class="summary-card card-total">
+                            <div class="card-number">${total}</div>
+                            <div class="card-label">Total Tests</div>
+                        </td>
+                        <td class="summary-card card-passed">
+                            <div class="card-number" style="color: #2e7d32;">${passed}</div>
+                            <div class="card-label" style="color: #2e7d32;">Passed</div>
+                        </td>
+                        <td class="summary-card card-failed">
+                            <div class="card-number" style="color: #d32f2f;">${failed}</div>
+                            <div class="card-label" style="color: #d32f2f;">Failed</div>
+                        </td>
+                        <td class="summary-card card-skipped">
+                            <div class="card-number" style="color: #f57c00;">${skipped}</div>
+                            <div class="card-label" style="color: #f57c00;">Skipped</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
 
-Build Information:
-------------------
-Build Number:      #${env.BUILD_NUMBER}
-Build Status:      ${buildStatus}
-Job Name:          ${env.JOB_NAME}
-Build URL:         ${env.BUILD_URL}
+            <div class="section">
+                <div class="section-title">🔨 Build Information</div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <div class="info-label">Build Number</div>
+                        <div class="info-value"><strong>#${env.BUILD_NUMBER}</strong></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Job Name</div>
+                        <div class="info-value">${env.JOB_NAME}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Build URL</div>
+                        <div class="info-value"><a href="${env.BUILD_URL}" target="_blank">View in Jenkins</a></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Committer</div>
+                        <div class="info-value">${committer}</div>
+                    </div>
+                </div>
+            </div>
 
-Repository Information:
------------------------
-Application Repo:  ${APP_REPO}
-Test Repo:         ${TEST_REPO}
+            <div class="section">
+                <div class="section-title">🚀 Deployment Information</div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <div class="info-label">Application URL</div>
+                        <div class="info-value"><a href="${deploymentUrl}" target="_blank">${deploymentUrl}</a></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">EC2 IP Address</div>
+                        <div class="info-value">${EC2_PUBLIC_IP}</div>
+                    </div>
+                </div>
+            </div>
 
-Deployment Information:
------------------------
-Application URL:   ${deploymentUrl}
-EC2 IP:            ${EC2_PUBLIC_IP}
+            <div class="section">
+                <div class="section-title">📁 Repository Information</div>
+                <div class="info-grid">
+                    <div class="info-row">
+                        <div class="info-label">Application Repository</div>
+                        <div class="info-value"><a href="${APP_REPO}" target="_blank">${APP_REPO}</a></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Test Repository</div>
+                        <div class="info-value"><a href="${TEST_REPO}" target="_blank">${TEST_REPO}</a></div>
+                    </div>
+                </div>
+            </div>
 
-Test Summary:
--------------
-Total Tests:       ${total}
-Passed:            ${passed}
-Failed:            ${failed}
-Skipped:           ${skipped}
-
-Detailed Test Results:
-----------------------
-${details ?: 'No test details available'}
-
-==============================================
-Commit Information:
-------------------
-Committer:         ${committer}
-
-==============================================
-This is an automated message from Jenkins CI/CD Pipeline.
+            <div class="section">
+                <div class="section-title">📝 Detailed Test Results</div>
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${details ?: '<tr><td colspan="2" style="text-align: center; padding: 20px; color: #999;">No test details available</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message from Jenkins CI/CD Pipeline</p>
+            <p>© ${new Date().format('yyyy')} Todo App Testing Suite</p>
+        </div>
+    </div>
+</body>
+</html>
 """
 
-                    def emailSubject = "Build #${env.BUILD_NUMBER} - ${buildStatus} - ${passed}/${total} Tests Passed"
+                    def emailSubject = "${statusIcon} Build #${env.BUILD_NUMBER} - ${buildStatus} - ${passed}/${total} Tests Passed"
 
                     emailext(
                         to: committer,
                         subject: emailSubject,
                         body: emailBody,
-                        mimeType: 'text/plain',
+                        mimeType: 'text/html',
                         replyTo: 'hussnainbhati157@gmail.com',
                         from: 'hussnainbhati157@gmail.com'
                     )
