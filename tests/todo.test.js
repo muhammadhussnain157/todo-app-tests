@@ -259,6 +259,13 @@ describe('Todo App - Todo Management Tests', () => {
    */
   test('TC8 - Should navigate to important todos page', async () => {
     try {
+      // First ensure we're logged in by visiting home
+      await driver.get(`${BASE_URL}/`);
+      await sleep(2000);
+      
+      // Store cookies before navigation
+      const cookies = await driver.manage().getCookies();
+      
       // Navigate to important page directly
       await driver.get(`${BASE_URL}/important`);
       await sleep(3000);
@@ -280,6 +287,10 @@ describe('Todo App - Todo Management Tests', () => {
    */
   test('TC9 - Should navigate to pending todos page', async () => {
     try {
+      // First ensure we're logged in by visiting home
+      await driver.get(`${BASE_URL}/`);
+      await sleep(2000);
+      
       // Navigate to pending page directly
       await driver.get(`${BASE_URL}/pending`);
       await sleep(3000);
@@ -361,15 +372,27 @@ describe('Todo App - Todo Management Tests', () => {
         await todoInput.clear();
         await todoInput.sendKeys(uniqueTodo);
         await todoInput.sendKeys(Key.RETURN);
-        await sleep(2000);
+        await sleep(3000); // Wait for todo to be created
       }
 
-      // Reload the page
+      // Visit home again to refresh session before reload
+      await driver.get(`${BASE_URL}/`);
+      await sleep(2000);
+
+      // Now reload the page
       await driver.navigate().refresh();
       await sleep(5000);
 
       // Wait for page to fully load
       await driver.wait(until.elementLocated(By.css('body')), 10000);
+      
+      // Check current URL - should still be on home page, not redirected to login
+      const currentUrl = await driver.getCurrentUrl();
+      
+      // If redirected to login, the session was lost
+      if (currentUrl.includes('/auth/login')) {
+        throw new Error('Session lost after page reload - redirected to login');
+      }
       
       // Check if todo still exists
       const pageSource = await driver.getPageSource();
