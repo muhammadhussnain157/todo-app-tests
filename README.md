@@ -31,21 +31,6 @@ Automated test suite for the Todo Next.js application using Selenium WebDriver.
 - **Docker**: Containerized test execution
 - **Chrome Headless**: Browser for testing
 
-## 📁 Project Structure
-
-```
-todo-app-tests/
-├── tests/
-│   ├── auth.test.js           # Authentication tests (TC1-TC5)
-│   ├── todo.test.js           # Todo management tests (TC6-TC14)
-│   └── helpers/
-│       └── driverHelper.js    # Selenium utilities
-├── Dockerfile.test            # Docker image for tests
-├── Jenkinsfile                # CI/CD pipeline
-├── jest.config.js             # Jest configuration
-├── package.json               # Dependencies
-└── .gitignore
-```
 
 ## 🚀 Running Tests
 
