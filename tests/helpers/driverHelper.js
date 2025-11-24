@@ -20,6 +20,10 @@ async function createDriver(headless = true) {
   options.addArguments('--disable-extensions');
   options.addArguments('--disable-software-rasterizer');
   options.addArguments('--remote-debugging-port=9222');
+  
+  // Enable cookie persistence
+  options.addArguments('--enable-features=NetworkService,NetworkServiceInProcess');
+  options.addArguments('--disable-features=VizDisplayCompositor');
 
   const driver = await new Builder()
     .forBrowser('chrome')
@@ -28,6 +32,9 @@ async function createDriver(headless = true) {
 
   // Set implicit wait
   await driver.manage().setTimeouts({ implicit: 10000 });
+  
+  // Clear any existing cookies
+  await driver.manage().deleteAllCookies();
 
   return driver;
 }

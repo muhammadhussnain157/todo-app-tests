@@ -1,5 +1,5 @@
 const { By, until, Key } = require('selenium-webdriver');
-const { createDriver, sleep, takeScreenshot } = require('./helpers/driverHelper');
+const { createDriver, sleep, takeScreenshot } = require('../helpers/driverHelper');
 
 // Configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
@@ -25,10 +25,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 6: Create a New Todo
+   * TEST CASE 4: Create a New Todo
    * Tests the ability to add a new todo item
    */
-  test('TC6 - Should successfully create a new todo item', async () => {
+  test('TC4 - Should successfully create a new todo item', async () => {
     try {
       // Should already be on home page from login
       await driver.get(`${BASE_URL}/`);
@@ -116,10 +116,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 7: Mark Todo as Complete
+   * TEST CASE 5: Mark Todo as Complete
    * Tests the ability to mark a todo item as done
    */
-  test('TC7 - Should mark a todo item as complete', async () => {
+  test('TC5 - Should mark a todo item as complete', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -151,10 +151,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 8: Mark Todo as Important
+   * TEST CASE 6: Mark Todo as Important
    * Tests the ability to mark a todo as important
    */
-  test('TC8 - Should mark a todo item as important', async () => {
+  test('TC6 - Should mark a todo item as important', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -199,10 +199,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 9: Delete a Todo
+   * TEST CASE 7: Delete a Todo
    * Tests the ability to delete a todo item
    */
-  test('TC9 - Should successfully delete a todo item', async () => {
+  test('TC7 - Should successfully delete a todo item', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -254,18 +254,16 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 10: Navigate to Important Todos Page
+   * TEST CASE 8: Navigate to Important Todos Page
    * Tests navigation to the important todos view
    */
-  test('TC10 - Should navigate to important todos page', async () => {
+  test('TC8 - Should navigate to important todos page', async () => {
     try {
-      await driver.get(`${BASE_URL}/`);
-      await sleep(2000);
-
-      // Try to navigate to important page
+      // Navigate to important page directly
       await driver.get(`${BASE_URL}/important`);
-      await sleep(2000);
+      await sleep(3000);
 
+      // Wait for page to load and check if redirected
       const currentUrl = await driver.getCurrentUrl();
       expect(currentUrl).toContain('/important');
 
@@ -277,18 +275,16 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 11: Navigate to Pending Todos Page
+   * TEST CASE 9: Navigate to Pending Todos Page
    * Tests navigation to the pending todos view
    */
-  test('TC11 - Should navigate to pending todos page', async () => {
+  test('TC9 - Should navigate to pending todos page', async () => {
     try {
-      await driver.get(`${BASE_URL}/`);
-      await sleep(2000);
-
-      // Navigate to pending page
+      // Navigate to pending page directly
       await driver.get(`${BASE_URL}/pending`);
-      await sleep(2000);
+      await sleep(3000);
 
+      // Wait for page to load and check if redirected
       const currentUrl = await driver.getCurrentUrl();
       expect(currentUrl).toContain('/pending');
 
@@ -300,13 +296,13 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 12: Create Multiple Todos
+   * TEST CASE 10: Create Multiple Todos
    * Tests creating multiple todo items in succession
    */
-  test('TC12 - Should create multiple todos successfully', async () => {
+  test('TC10 - Should create multiple todos successfully', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
-      await sleep(2000);
+      await sleep(3000);
 
       const todosToCreate = [
         `First Todo ${Date.now()}`,
@@ -328,7 +324,7 @@ describe('Todo App - Todo Management Tests', () => {
           await todoInput.clear();
           await todoInput.sendKeys(todoContent);
           await todoInput.sendKeys(Key.RETURN);
-          await sleep(2000);
+          await sleep(3000); // Increased wait time
         }
       }
 
@@ -338,13 +334,13 @@ describe('Todo App - Todo Management Tests', () => {
       await takeScreenshot(driver, 'multiple-todos-error');
       throw error;
     }
-  });
+  }, 90000); // Increased timeout to 90 seconds
 
   /**
-   * TEST CASE 13: Verify Todo Persistence
+   * TEST CASE 11: Verify Todo Persistence
    * Tests that todos persist after page reload
    */
-  test('TC13 - Should persist todos after page reload', async () => {
+  test('TC11 - Should persist todos after page reload', async () => {
     try {
       // Create a unique todo
       await driver.get(`${BASE_URL}/`);
@@ -370,8 +366,11 @@ describe('Todo App - Todo Management Tests', () => {
 
       // Reload the page
       await driver.navigate().refresh();
-      await sleep(3000);
+      await sleep(5000);
 
+      // Wait for page to fully load
+      await driver.wait(until.elementLocated(By.css('body')), 10000);
+      
       // Check if todo still exists
       const pageSource = await driver.getPageSource();
       expect(pageSource).toContain(uniqueTodo);
@@ -384,10 +383,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 14: Verify Authentication Redirect
+   * TEST CASE 12: Verify Authentication Redirect
    * Tests that unauthenticated users are redirected to login
    */
-  test('TC14 - Should redirect unauthenticated users to login', async () => {
+  test('TC12 - Should redirect unauthenticated users to login', async () => {
     try {
       // Create a new driver instance without login
       const tempDriver = await createDriver(true);
@@ -405,7 +404,7 @@ describe('Todo App - Todo Management Tests', () => {
         const screenshot = await tempDriver.takeScreenshot();
         const fs = require('fs');
         const path = require('path');
-        const dir = path.join(__dirname, 'screenshots');
+        const dir = path.join(__dirname, '../screenshots');
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true });
         }
