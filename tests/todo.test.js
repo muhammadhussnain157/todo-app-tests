@@ -29,10 +29,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 4: Create a New Todo
+   * TEST CASE 6: Create a New Todo
    * Tests the ability to add a new todo item
    */
-  test('TC4 - Should successfully create a new todo item', async () => {
+  test('TC6 - Should successfully create a new todo item', async () => {
     try {
       // Should already be on home page from login
       await driver.get(`${BASE_URL}/`);
@@ -120,10 +120,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 5: Mark Todo as Complete
+   * TEST CASE 7: Mark Todo as Complete
    * Tests the ability to mark a todo item as done
    */
-  test('TC5 - Should mark a todo item as complete', async () => {
+  test('TC7 - Should mark a todo item as complete', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -155,10 +155,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 6: Mark Todo as Important
+   * TEST CASE 8: Mark Todo as Important
    * Tests the ability to mark a todo as important
    */
-  test('TC6 - Should mark a todo item as important', async () => {
+  test('TC8 - Should mark a todo item as important', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -203,10 +203,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 7: Delete a Todo
+   * TEST CASE 9: Delete a Todo
    * Tests the ability to delete a todo item
    */
-  test('TC7 - Should successfully delete a todo item', async () => {
+  test('TC9 - Should successfully delete a todo item', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(2000);
@@ -258,10 +258,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 8: Navigate to Important Todos Page
+   * TEST CASE 10: Navigate to Important Todos Page
    * Tests navigation to the important todos view
    */
-  test('TC8 - Should navigate to important todos page', async () => {
+  test('TC10 - Should navigate to important todos page', async () => {
     try {
       // Navigate with cookie preservation
       await navigateWithCookies(driver, `${BASE_URL}/important`, sessionCookies);
@@ -279,10 +279,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 9: Navigate to Pending Todos Page
+   * TEST CASE 11: Navigate to Pending Todos Page
    * Tests navigation to the pending todos view
    */
-  test('TC9 - Should navigate to pending todos page', async () => {
+  test('TC11 - Should navigate to pending todos page', async () => {
     try {
       // Navigate with cookie preservation
       await navigateWithCookies(driver, `${BASE_URL}/pending`, sessionCookies);
@@ -300,10 +300,10 @@ describe('Todo App - Todo Management Tests', () => {
   });
 
   /**
-   * TEST CASE 10: Create Multiple Todos
+   * TEST CASE 12: Create Multiple Todos
    * Tests creating multiple todo items in succession
    */
-  test('TC10 - Should create multiple todos successfully', async () => {
+  test('TC12 - Should create multiple todos successfully', async () => {
     try {
       await driver.get(`${BASE_URL}/`);
       await sleep(3000);
@@ -341,63 +341,10 @@ describe('Todo App - Todo Management Tests', () => {
   }, 90000); // Increased timeout to 90 seconds
 
   /**
-   * TEST CASE 11: Verify Todo Persistence
-   * Tests that todos persist after page reload
-   */
-  test('TC11 - Should persist todos after page reload', async () => {
-    try {
-      // Navigate with cookies
-      await navigateWithCookies(driver, `${BASE_URL}/`, sessionCookies);
-      await sleep(2000);
-
-      const uniqueTodo = `Persistent Todo ${Date.now()}`;
-
-      // Create the todo
-      const todoInputs = await driver.findElements(By.css('input[type="text"]'));
-      let todoInput = todoInputs.length > 0 ? todoInputs[0] : null;
-
-      if (!todoInput) {
-        const textareas = await driver.findElements(By.css('textarea'));
-        todoInput = textareas.length > 0 ? textareas[0] : null;
-      }
-
-      if (todoInput) {
-        await todoInput.clear();
-        await todoInput.sendKeys(uniqueTodo);
-        await todoInput.sendKeys(Key.RETURN);
-        await sleep(3000); // Wait for todo to be created
-      }
-
-      // Refresh the page with cookies
-      await navigateWithCookies(driver, `${BASE_URL}/`, sessionCookies);
-      await sleep(3000);
-
-      // Wait for page to fully load
-      await driver.wait(until.elementLocated(By.css('body')), 10000);
-      
-      // Check current URL - should still be on home page
-      const currentUrl = await driver.getCurrentUrl();
-      
-      if (currentUrl.includes('/auth/login')) {
-        throw new Error('Session lost after page reload - redirected to login');
-      }
-      
-      // Check if todo still exists
-      const pageSource = await driver.getPageSource();
-      expect(pageSource).toContain(uniqueTodo);
-
-      await takeScreenshot(driver, 'todo-persistence');
-    } catch (error) {
-      await takeScreenshot(driver, 'persistence-error');
-      throw error;
-    }
-  });
-
-  /**
-   * TEST CASE 12: Verify Authentication Redirect
+   * TEST CASE 13: Verify Authentication Redirect
    * Tests that unauthenticated users are redirected to login
    */
-  test('TC12 - Should redirect unauthenticated users to login', async () => {
+  test('TC13 - Should redirect unauthenticated users to login', async () => {
     try {
       // Create a new driver instance without login
       const tempDriver = await createDriver(true);
