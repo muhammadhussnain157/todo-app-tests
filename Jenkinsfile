@@ -230,7 +230,9 @@ This is an automated message from Jenkins CI/CD Pipeline.
                         to: committer,
                         subject: emailSubject,
                         body: emailBody,
-                        mimeType: 'text/plain'
+                        mimeType: 'text/plain',
+                        replyTo: 'hussnainbhati157@gmail.com',
+                        from: 'hussnainbhati157@gmail.com'
                     )
                     
                     echo "Email sent to: ${committer}"
