@@ -51,6 +51,7 @@ pipeline {
                 dir('app') {
                     sh '''
                         docker-compose -f docker-compose.jenkins.yml down || true
+                        docker rm -f todo-jenkins-web todo-jenkins-db || true
                         docker system prune -f
                     '''
                 }
@@ -64,8 +65,11 @@ pipeline {
                     sh '''
                         docker-compose -f docker-compose.jenkins.yml up -d --build
                         
-                        echo "Waiting 120 seconds for containers to be ready..."
+                        echo "Waiting for containers to be ready (this may take 2-3 minutes)..."
                         sleep 120
+                        
+                        echo "Checking if containers are still running..."
+                        docker ps
                     '''
                 }
             }
@@ -74,13 +78,58 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 echo '========== Verifying deployment =========='
-                sh '''
-                    echo "Checking running containers:"
-                    docker ps
+                script {
+                    // Check if web container is running
+                    def webRunning = sh(
+                        script: 'docker ps | grep todo-jenkins-web',
+                        returnStatus: true
+                    )
                     
-                    echo "\\nTesting application accessibility:"
-                    curl -f http://localhost:3001 || echo "App not responding yet"
-                '''
+                    if (webRunning == 0) {
+                        echo '✓ Web container is running'
+                    } else {
+                        echo '✗ Web container is NOT running! Checking logs...'
+                        sh 'docker logs todo-jenkins-web --tail 100 || true'
+                        sh 'docker ps -a | grep todo-jenkins || true'
+                        error 'Web container is not running!'
+                    }
+                    
+                    // Check if db container is running
+                    def dbRunning = sh(
+                        script: 'docker ps | grep todo-jenkins-db',
+                        returnStatus: true
+                    )
+                    
+                    if (dbRunning == 0) {
+                        echo '✓ Database container is running'
+                    } else {
+                        echo '✗ Database container is NOT running! Checking logs...'
+                        sh 'docker logs todo-jenkins-db --tail 100 || true'
+                        error 'Database container is not running!'
+                    }
+                    
+                    // Test application accessibility with retry
+                    def appReady = false
+                    for (int i = 0; i < 5; i++) {
+                        def curlStatus = sh(
+                            script: 'curl -f -s http://localhost:3001 > /dev/null',
+                            returnStatus: true
+                        )
+                        if (curlStatus == 0) {
+                            appReady = true
+                            echo "✓ Application is accessible at http://localhost:3001"
+                            break
+                        }
+                        echo "Attempt ${i+1}/5: App not ready, waiting 10 seconds..."
+                        sleep 10
+                    }
+                    
+                    if (!appReady) {
+                        echo 'Application is not responding. Displaying logs...'
+                        sh 'docker logs todo-jenkins-web --tail 100 || true'
+                        error 'Application failed to start!'
+                    }
+                }
             }
         }
 
