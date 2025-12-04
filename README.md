@@ -1,6 +1,6 @@
 # Todo App - Selenium Tests
 
-Automated test suite for the Todo Next.js application using Selenium WebDriver
+Automated test suite for the Todo Next.js application using Selenium WebDriver.
 
 ## 📝 Test Cases
 
